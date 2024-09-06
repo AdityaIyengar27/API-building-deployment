@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
+  db:   # Not letting to connect to the database as the port is not exposed
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:  # Defined the volume to store the data. This property is added in the end.
+      - db:/var/lib/postgresql/data
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      - ENVIRONMENT=test
+    env_file:
+      - .env
+    command: [ "pytest", "--disable-warnings" ]
+
+volumes:
+  db:
+    driver: local
